@@ -11,11 +11,11 @@
 
       <img
         class="profile"
-        [src]="'https://ameobea.b-cdn.net/osutrack/Mixins/userImage.php?u=' + activeUser.uId"
+        [src]="'https://api.allorigins.win/raw?url=https://ameobea.b-cdn.net/osutrack/Mixins/userImage.php?u=' + activeUser.uId"
         alt=""
       />
 
-      <img class="country" [src]="'https://osu.ppy.sh/assets/images/flags/' + userCountry + '.svg'" />
+      <img class="country" [src]="'https://api.allorigins.win/raw?url=https://osu.ppy.sh/assets/images/flags/' + userCountry + '.svg'" />
 
       <span class="rating">{{ activeUser.rating }}</span>
       <span class="wrm">WRM: {{ activeUser.wrm }}</span>
