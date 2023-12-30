@@ -12,6 +12,7 @@ export interface User {
   ar: number;
   length: string;
   rating: number;
+  country: string;
   sr: number;
   rfx: number;
   ten: number;
@@ -21,21 +22,6 @@ export interface User {
   pre: number;
   wrm: number;
   title: string;
-  prevSr: number;
-  prevUpdate: string;
-  prevRfx: number;
-  prevTen: number;
-  prevSta: number;
-  prevAcc: number;
-  prevRea: number;
-  prevPre: number;
-  diffRfx: number;
-  diffTen: number;
-  diffSta: number;
-  diffAcc: number;
-  diffRea: number;
-  diffPre: number;
-  diffSr: number;
 }
 
 @Injectable({
@@ -43,7 +29,7 @@ export interface User {
 })
 export class SheetFetchService {
   private SkillRatingLink: string =
-    'https://docs.google.com/spreadsheets/d/1s-ItBZwDzWb_taDPD2L2jrUbNzl4pxjSgXcE5dza4tc/export?format=csv&id=1s-ItBZwDzWb_taDPD2L2jrUbNzl4pxjSgXcE5dza4tc&gid=1043073592';
+    'https://docs.google.com/spreadsheets/d/1s-ItBZwDzWb_taDPD2L2jrUbNzl4pxjSgXcE5dza4tc/export?format=csv&id=1s-ItBZwDzWb_taDPD2L2jrUbNzl4pxjSgXcE5dza4tc&gid=64960459';
 
   public Users: User[] = [];
   constructor(private httpClient: HttpClient, private papa: Papa) {
@@ -64,19 +50,19 @@ export class SheetFetchService {
           output.map((user: any) => {
             if (true) {
               let average =
-                (parseFloat(user[9]) +
-                  parseFloat(user[10]) +
+                (parseFloat(user[10]) +
                   parseFloat(user[11]) +
                   parseFloat(user[12]) +
                   parseFloat(user[13]) +
-                  parseFloat(user[14])) /
+                  parseFloat(user[14]) +
+                  parseFloat(user[15])) /
                 6;
 
               if (user[0] == 'CyCeph') {
                 console.log(average);
               }
 
-              let sr = Math.pow(parseFloat(user[8]) / 5000, 0.5);
+              let sr = Math.pow(parseFloat(user[9]) / 5000, 0.5);
 
               let score = (100 * sr + average) / 2;
 
@@ -90,30 +76,16 @@ export class SheetFetchService {
                 ar: user[6],
                 length: user[7],
                 rating: Math.round(score),
-                sr: user[8],
-                rfx: Math.round(user[9]),
-                ten: Math.round(user[10]),
-                sta: Math.round(user[11]),
-                acc: Math.round(user[12]),
-                rea: Math.round(user[13]),
-                pre: Math.round(user[14]),
-                wrm: Math.round(user[15] * 10) / 10,
-                title: user[16],
-                prevSr: user[18],
-                prevUpdate: user[19],
-                prevRfx: user[20],
-                prevTen: user[21],
-                prevSta: user[22],
-                prevAcc: user[23],
-                prevRea: user[24],
-                prevPre: user[25],
-                diffRfx: user[26],
-                diffTen: user[27],
-                diffSta: user[28],
-                diffAcc: user[29],
-                diffRea: user[30],
-                diffPre: user[31],
-                diffSr: user[32],
+                country: user[8],
+                sr: user[9],
+                rfx: Math.round(user[10]),
+                ten: Math.round(user[11]),
+                sta: Math.round(user[12]),
+                acc: Math.round(user[13]),
+                rea: Math.round(user[14]),
+                pre: Math.round(user[15]),
+                wrm: Math.round(user[16] * 10) / 10,
+                title: user[17],
               });
             }
           });
