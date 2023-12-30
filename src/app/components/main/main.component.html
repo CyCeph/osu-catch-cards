@@ -20,7 +20,7 @@
       <span class="rating">{{ activeUser.rating }}</span>
       <span class="wrm">WRM: {{ activeUser.wrm }}</span>
 
-      <span class="username">{{ activeUser.username }}</span>
+      <span [ngClass]="activeUser.username.length > 10 ? 'username-long' : 'username-short'">{{ activeUser.username }}</span>
 
       <span class="rfx">RFX: {{ activeUser.rfx }}</span>
       <span class="ten">TEN: {{ activeUser.ten }}</span>
