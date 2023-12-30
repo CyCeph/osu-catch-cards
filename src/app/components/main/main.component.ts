@@ -32,6 +32,9 @@ export class MainComponent {
   public countryLoaded = false;
 
   private images = [
+    'Jester.png',
+    'Legend.png',
+    'Secret.png',
     'Advanced.png',
     'Amateur.png',
     'Beginner.png',
