@@ -1,0 +1,38 @@
+<div class="container">
+  <div class="column">
+    <div class="search">
+      <input #usersearch (keyup.enter)="search()" class="search-input" type="text" on />
+      <button (click)="search()">Search!</button>
+      <button (click)="downloadImage()">Download</button>
+    </div>
+
+    <div #screen class="card" *ngIf="activeUser && userCountry && !loading">
+      <img [src]="'assets/' + activeUser.title + '.png'" />
+
+      <img
+        class="profile"
+        [src]="'https://ameobea.b-cdn.net/osutrack/Mixins/userImage.php?u=' + activeUser.uId"
+        alt=""
+      />
+
+      <img class="country" [src]="'https://osu.ppy.sh/assets/images/flags/' + userCountry + '.svg'" />
+
+      <span class="rating">{{ activeUser.rating }}</span>
+      <span class="wrm">WRM: {{ activeUser.wrm }}</span>
+
+      <span class="username">{{ activeUser.username }}</span>
+
+      <span class="rfx">RFX: {{ activeUser.rfx }}</span>
+      <span class="ten">TEN: {{ activeUser.ten }}</span>
+      <span class="sta">STA: {{ activeUser.sta }}</span>
+      <span class="acc">ACC: {{ activeUser.acc }}</span>
+      <span class="rea">REA: {{ activeUser.rea }}</span>
+      <span class="pre">PRE: {{ activeUser.pre }}</span>
+    </div>
+  </div>
+</div>
+
+<div id="download">
+  <img #canvas />
+  <a #downloadLink></a>
+</div>

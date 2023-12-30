@@ -1,0 +1,20 @@
+{
+  "/Mixins/": {
+    "target": "https://ameobea.b-cdn.net/osutrack/",
+    "secure": false,
+    "logLevel": "debug",
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    }
+  },
+  "/flags/": {
+    "target": "https://osu.ppy.sh/assets/images/",
+    "secure": false,
+    "logLevel": "debug",
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    }
+  }
+}
