@@ -34,7 +34,7 @@ export class MainComponent {
   private images = [
     'Jester.png',
     'Legend.png',
-    'Secret.png',
+    'Special.png',
     'Advanced.png',
     'Amateur.png',
     'Beginner.png',
