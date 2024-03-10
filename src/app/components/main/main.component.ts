@@ -43,13 +43,14 @@ export class MainComponent {
     'Grandmaster.png',
     'Master.png',
     'Untitled.png',
+    'Beyond.png',
   ];
 
   public loadImages() {
     for (let i = 0; i < this.images.length; i++) {
       console.log(i);
       let img = new Image();
-      img.onload = () => {};
+      img.onload = () => { };
       img.src = 'assets/' + this.images[i];
     }
   }
