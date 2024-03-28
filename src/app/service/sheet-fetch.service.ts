@@ -50,19 +50,19 @@ export class SheetFetchService {
           output.map((user: any) => {
             if (true) {
               let average =
-                (parseFloat(user[10]) +
-                  parseFloat(user[11]) +
+                (parseFloat(user[11]) +
                   parseFloat(user[12]) +
                   parseFloat(user[13]) +
                   parseFloat(user[14]) +
-                  parseFloat(user[15])) /
+                  parseFloat(user[15]) +
+                  parseFloat(user[16])) /
                 6;
 
               if (user[0] == 'CyCeph') {
                 console.log(average);
               }
 
-              let sr = Math.pow(parseFloat(user[9]) / 5000, 0.5);
+              let sr = Math.pow(parseFloat(user[10]) / 5000, 0.5);
 
               let score = (100 * sr + average) / 2;
 
@@ -76,16 +76,16 @@ export class SheetFetchService {
                 ar: user[6],
                 length: user[7],
                 rating: Math.round(score),
-                country: user[8],
-                sr: user[9],
-                rfx: Math.round(user[10]),
-                ten: Math.round(user[11]),
-                sta: Math.round(user[12]),
-                acc: Math.round(user[13]),
-                rea: Math.round(user[14]),
-                pre: Math.round(user[15]),
-                wrm: Math.round(user[16] * 10) / 10,
-                title: user[17],
+                country: user[9],
+                sr: user[10],
+                rfx: Math.round(user[11]),
+                ten: Math.round(user[12]),
+                sta: Math.round(user[13]),
+                acc: Math.round(user[14]),
+                rea: Math.round(user[15]),
+                pre: Math.round(user[16]),
+                wrm: Math.round(user[17] * 10) / 10,
+                title: user[18],
               });
             }
           });
