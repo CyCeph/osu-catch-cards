@@ -44,6 +44,7 @@ export class MainComponent {
     'Master.png',
     'Untitled.png',
     'Beyond.png',
+    'Birmingham.png',
   ];
 
   public loadImages() {
