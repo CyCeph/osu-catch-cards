@@ -49,22 +49,36 @@ export class SheetFetchService {
 
           output.map((user: any) => {
             if (true) {
-              let average =
-                (parseFloat(user[11]) +
-                  parseFloat(user[12]) +
-                  parseFloat(user[13]) +
-                  parseFloat(user[14]) +
-                  parseFloat(user[15]) +
-                  parseFloat(user[16])) /
-                6;
+              // let average =
+              //   (parseFloat(user[11]) +
+              //     parseFloat(user[12]) +
+              //     parseFloat(user[13]) +
+              //     parseFloat(user[14]) +
+              //     parseFloat(user[15]) +
+              //     parseFloat(user[16])) /
+              //   6;
 
-              if (user[0] == 'CyCeph') {
-                console.log(average);
-              }
+              // if (user[0] == 'CyCeph') {
+              //   console.log(average);
+              // }
 
-              let sr = Math.pow(parseFloat(user[10]) / 5000, 0.5);
+              // let sr = Math.pow(parseFloat(user[10]) / 5000, 0.5);
 
-              let score = (100 * sr + average) / 2;
+              // let score = (100 * sr + average) / 2;
+
+              let skills = [parseFloat(user[11]), parseFloat(user[12]), parseFloat(user[13]), parseFloat(user[14]), parseFloat(user[15]), parseFloat(user[16])];
+
+              skills.sort((a, b) => b - a);
+
+              const top3 = skills.slice(0, 3);
+              const bottom3 = skills.slice(3);
+
+              const top3Avg = top3.reduce((a, b) => a + b, 0) / top3.length;
+              const bottom3Avg = bottom3.reduce((a, b) => a + b, 0) / bottom3.length;
+
+              const result = (top3Avg + (bottom3Avg * 0.5)) / 1.5;
+
+              let score = result;
 
               this.Users.push({
                 username: user[0],
