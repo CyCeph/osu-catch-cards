@@ -66,7 +66,7 @@ export class SheetFetchService {
 
               // let score = (100 * sr + average) / 2;
 
-              let skills = [parseFloat(user[11]), parseFloat(user[12]), parseFloat(user[13]), parseFloat(user[14]), parseFloat(user[15]), parseFloat(user[16])];
+              let skills = [parseFloat(user[13]), parseFloat(user[14]), parseFloat(user[15]), parseFloat(user[16]), parseFloat(user[17]), parseFloat(user[18])];
 
               skills.sort((a, b) => b - a);
 
@@ -81,25 +81,25 @@ export class SheetFetchService {
               let score = result;
 
               this.Users.push({
-                username: user[0],
-                uId: user[1],
-                pp: user[2],
-                accPercentage: user[3],
-                starRating: user[4],
-                cs: user[5],
-                ar: user[6],
-                length: user[7],
+                username: user[2],
+                uId: user[3],
+                pp: user[4],
+                accPercentage: user[5],
+                starRating: user[6],
+                cs: user[8],
+                ar: user[7],
+                length: user[10],
                 rating: Math.round(score),
-                country: user[9],
-                sr: user[10],
-                rfx: Math.round(user[11]),
-                ten: Math.round(user[12]),
-                sta: Math.round(user[13]),
-                acc: Math.round(user[14]),
-                rea: Math.round(user[15]),
-                pre: Math.round(user[16]),
-                wrm: Math.round(user[17] * 10) / 10,
-                title: user[18],
+                country: user[11],
+                sr: user[12],
+                rfx: Math.round(user[13]),
+                ten: Math.round(user[14]),
+                sta: Math.round(user[15]),
+                acc: Math.round(user[16]),
+                rea: Math.round(user[17]),
+                pre: Math.round(user[18]),
+                wrm: Math.round(user[19] * 10) / 10,
+                title: user[20],
               });
             }
           });
