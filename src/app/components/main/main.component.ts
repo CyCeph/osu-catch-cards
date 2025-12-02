@@ -27,6 +27,7 @@ export class MainComponent {
   public searchError: string = '';
   public downloadError: string = '';
   public dataLoading: boolean = true;
+  public isShiny: boolean = false;
 
   // Expose encodeURIComponent to template
   public readonly encodeURIComponent = encodeURIComponent;
@@ -158,6 +159,12 @@ export class MainComponent {
     }
 
     this.activeUser = user;
+
+    // 1% chance for shiny card
+    this.isShiny = Math.random() < 0.01;
+    if (this.isShiny) {
+      console.log('✨ SHINY CARD! ✨');
+    }
 
     this.fetch.getCountryCode(this.activeUser.uId).subscribe({
       next: (data: CountryResponse) => {

@@ -45,7 +45,8 @@
     </div>
 
     <!-- User Card -->
-    <div #screen class="card" *ngIf="activeUser && userCountry && !loading">
+    <div #screen class="card" [class.shiny]="isShiny" *ngIf="activeUser && userCountry && !loading">
+      <div class="shiny-badge" *ngIf="isShiny">SHINY</div>
       <img
         [src]="'assets/' + activeUser.title + '.png'"
         [alt]="activeUser.title + ' card background'"
