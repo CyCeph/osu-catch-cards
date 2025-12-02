@@ -1,8 +1,6 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, ViewChild } from '@angular/core';
-import * as htmlToImage from 'html-to-image';
+import { Component, ElementRef, ViewChild, inject } from '@angular/core';
 import * as sc from 'modern-screenshot';
-import { SheetFetchService, User } from 'src/app/service/sheet-fetch.service';
+import { SheetFetchService, User, CountryResponse } from 'src/app/service/sheet-fetch.service';
 
 @Component({
   selector: 'app-main',
@@ -10,28 +8,30 @@ import { SheetFetchService, User } from 'src/app/service/sheet-fetch.service';
   styleUrls: ['./main.component.sass'],
 })
 export class MainComponent {
-  constructor(private fetch: SheetFetchService, private http: HttpClient) {
-    this.loadImages();
-  }
+  // Modern dependency injection
+  private readonly fetch = inject(SheetFetchService);
 
   @ViewChild('usersearch', { read: ElementRef, static: true })
-  userSearch: ElementRef;
+  userSearch!: ElementRef<HTMLInputElement>;
 
-  @ViewChild('screen') screen: ElementRef;
-  @ViewChild('canvas') canvas: ElementRef;
-  @ViewChild('downloadLink') downloadLink: ElementRef;
+  @ViewChild('screen') screen!: ElementRef<HTMLElement>;
+  @ViewChild('downloadLink') downloadLink!: ElementRef<HTMLAnchorElement>;
 
-  public Users = this.fetch.Users;
+  public get Users(): User[] {
+    return this.fetch.Users;
+  }
 
-  public activeUser: User;
-  public userCountry: string;
-  public loading: boolean;
+  public activeUser: User | null = null;
+  public userCountry: string = '';
+  public loading: boolean = false;
+  public searchError: string = '';
+  public downloadError: string = '';
+  public dataLoading: boolean = true;
 
-  public profileImageLoaded = false;
-  public backgroundLoaded = false;
-  public countryLoaded = false;
+  // Expose encodeURIComponent to template
+  public readonly encodeURIComponent = encodeURIComponent;
 
-  private images = [
+  private readonly images: readonly string[] = [
     'Jester.png',
     'Legend.png',
     'Special.png',
@@ -48,45 +48,142 @@ export class MainComponent {
     'Supporter.png',
   ];
 
-  public loadImages() {
-    for (let i = 0; i < this.images.length; i++) {
-      console.log(i);
-      let img = new Image();
-      img.onload = () => { };
-      img.src = 'assets/' + this.images[i];
+  constructor() {
+    this.preloadImages();
+    this.waitForDataLoad();
+  }
+
+  /**
+   * Wait for user data to be loaded from the service
+   */
+  private waitForDataLoad(): void {
+    const checkInterval = setInterval(() => {
+      if (this.fetch.Users.length > 0) {
+        this.dataLoading = false;
+        clearInterval(checkInterval);
+        console.log(`Loaded ${this.fetch.Users.length} users from database`);
+      }
+    }, 100);
+
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      if (this.dataLoading) {
+        clearInterval(checkInterval);
+        this.dataLoading = false;
+        this.searchError = 'Failed to load user database. Please refresh the page.';
+      }
+    }, 10000);
+  }
+
+  /**
+   * Preload card images for better performance
+   */
+  private async preloadImages(): Promise<void> {
+    const promises = this.images.map((imageName) => {
+      return new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error(`Failed to load ${imageName}`));
+        img.src = `assets/${imageName}`;
+      });
+    });
+
+    try {
+      await Promise.all(promises);
+    } catch (error) {
+      console.error('Error preloading images:', error);
     }
   }
-  public downloadImage() {
-    sc.domToPng(this.screen.nativeElement, {}).then((dataUrl) => {
+
+  /**
+   * Download the generated card as PNG
+   */
+  public async downloadImage(): Promise<void> {
+    if (!this.activeUser || !this.screen) {
+      this.downloadError = 'No card to download. Please search for a user first.';
+      return;
+    }
+
+    try {
+      this.downloadError = '';
+      const dataUrl = await sc.domToPng(this.screen.nativeElement, {});
       this.downloadLink.nativeElement.href = dataUrl;
       this.downloadLink.nativeElement.download = `${this.activeUser.username}.png`;
       this.downloadLink.nativeElement.click();
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      this.downloadError = 'Failed to download image. Please try again.';
+    }
+  }
+
+  /**
+   * Search for a user and generate their card
+   */
+  public search(): void {
+    const inputValue = this.userSearch.nativeElement.value.trim();
+
+    if (!inputValue) {
+      this.searchError = 'Please enter a username';
+      return;
+    }
+
+    if (this.dataLoading) {
+      this.searchError = 'Please wait, loading user database...';
+      return;
+    }
+
+    if (this.Users.length === 0) {
+      this.searchError = 'User database is empty. Please refresh the page.';
+      return;
+    }
+
+    this.loading = true;
+    this.searchError = '';
+    this.downloadError = '';
+
+    console.log(`Searching for "${inputValue}" in ${this.Users.length} users`);
+
+    const user = this.Users.find(
+      (x) => x.username.toLowerCase() === inputValue.toLowerCase()
+    );
+
+    console.log('Found user:', user);
+
+    if (!user) {
+      this.loading = false;
+      this.searchError = `User "${inputValue}" not found in the database`;
+      this.activeUser = null;
+      this.userCountry = '';
+      return;
+    }
+
+    this.activeUser = user;
+
+    this.fetch.getCountryCode(this.activeUser.uId).subscribe({
+      next: (data: CountryResponse) => {
+        const letters: string = data.country_acronym;
+
+        this.userCountry = letters
+          .toUpperCase()
+          .split('')
+          .map((char) => (127397 + char.charCodeAt(0)).toString(16))
+          .join('-');
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error fetching country code:', error);
+        this.searchError = 'Failed to load user country. Please try again.';
+        this.loading = false;
+      }
     });
   }
 
-  public search() {
-    this.loading = true;
-
-    this.profileImageLoaded = false;
-    this.backgroundLoaded = false;
-    this.countryLoaded = false;
-
-    const inputValue = this.userSearch.nativeElement.value;
-
-    let user = this.Users.find(
-      (x) => x.username.toLocaleLowerCase() == inputValue.toLocaleLowerCase()
-    );
-
-    this.activeUser = user;
-    this.fetch.getCountryCode(this.activeUser.uId).subscribe((data: any) => {
-      let letters: string = data.country_acronym;
-
-      this.userCountry = letters
-        .toUpperCase()
-        .split('')
-        .map((char) => (127397 + char.charCodeAt(0)).toString(16))
-        .join('-');
-      this.loading = false;
-    });
+  /**
+   * Handle Enter key in search input
+   */
+  public onSearchKeyPress(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      this.search();
+    }
   }
 }
