@@ -1,38 +1,112 @@
 <div class="container">
   <div class="column">
-    <div class="search">
-      <input #usersearch (keyup.enter)="search()" class="search-input" type="text" on />
-      <button (click)="search()">Search!</button>
-      <button (click)="downloadImage()">Download</button>
+    <div class="search-section">
+      <div class="search-bar">
+        <input
+          #usersearch
+          (keyup.enter)="search()"
+          class="search-input"
+          type="text"
+          [placeholder]="dataLoading ? 'Loading database...' : 'Enter osu! username...'"
+          [disabled]="dataLoading"
+          aria-label="Search for osu! user"
+        />
+        <button
+          (click)="search()"
+          class="btn btn-primary"
+          [disabled]="dataLoading"
+          aria-label="Search"
+        >
+          <span class="btn-text">{{ dataLoading ? 'Loading...' : 'Search' }}</span>
+        </button>
+        <button
+          (click)="downloadImage()"
+          class="btn btn-secondary"
+          [disabled]="!activeUser"
+          aria-label="Download card"
+        >
+          <span class="btn-text">Download</span>
+        </button>
+      </div>
+
+      <!-- Error Messages -->
+      <div class="error-message" *ngIf="searchError" role="alert">
+        {{ searchError }}
+      </div>
+      <div class="error-message" *ngIf="downloadError" role="alert">
+        {{ downloadError }}
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-container" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading user data...</p>
+      </div>
     </div>
 
-    <div #screen class="card" *ngIf="activeUser && userCountry && !loading">
-      <img [src]="'assets/' + activeUser.title + '.png'" />
+    <!-- User Card -->
+    <div #screen class="card" [class.shiny]="isShiny" *ngIf="activeUser && userCountry && !loading">
+      <div class="shiny-badge" *ngIf="isShiny">SHINY</div>
+      <img
+        [src]="'assets/' + activeUser.title + '.png'"
+        [alt]="activeUser.title + ' card background'"
+        class="card-background"
+      />
 
       <img
         class="profile"
-        [src]="'https://ameobea.b-cdn.net/osutrack/Mixins/userImage.php?u=' + activeUser.uId"
-        alt=""
+        [src]="'https://corsproxy.io/?' + encodeURIComponent('https://ameobea.b-cdn.net/osutrack/Mixins/userImage.php?u=' + activeUser.uId)"
+        [alt]="activeUser.username + ' profile picture'"
+        crossorigin="anonymous"
       />
 
-      <img class="country" [src]="'https://osu.ppy.sh/assets/images/flags/' + userCountry + '.svg'" />
+      <img
+        class="country"
+        [src]="'https://corsproxy.io/?' + encodeURIComponent('https://osu.ppy.sh/assets/images/flags/' + userCountry + '.svg')"
+        [alt]="activeUser.country + ' flag'"
+        crossorigin="anonymous"
+      />
 
-      <span class="rating">{{ activeUser.rating }}</span>
-      <span class="wrm">WRM: {{ activeUser.wrm }}</span>
+      <span class="rating" aria-label="Overall rating">{{ activeUser.rating }}</span>
+      <span class="wrm" aria-label="Weighted rating multiplier">WRM: {{ activeUser.wrm }}</span>
 
-      <span class="username">{{ activeUser.username }}</span>
+      <span
+        [ngClass]="activeUser.username.length > 10 ? 'username-long' : 'username-short'"
+        class="username"
+      >
+        {{ activeUser.username }}
+      </span>
 
-      <span class="rfx">RFX: {{ activeUser.rfx }}</span>
-      <span class="ten">TEN: {{ activeUser.ten }}</span>
-      <span class="sta">STA: {{ activeUser.sta }}</span>
-      <span class="acc">ACC: {{ activeUser.acc }}</span>
-      <span class="rea">REA: {{ activeUser.rea }}</span>
-      <span class="pre">PRE: {{ activeUser.pre }}</span>
+      <span class="rfx stat-label" aria-label="Reflex stat">RFX: {{ activeUser.rfx }}</span>
+      <span class="ten stat-label" aria-label="Tenacity stat">TEN: {{ activeUser.ten }}</span>
+      <span class="sta stat-label" aria-label="Stamina stat">STA: {{ activeUser.sta }}</span>
+      <span class="acc stat-label" aria-label="Accuracy stat">ACC: {{ activeUser.acc }}</span>
+      <span class="rea stat-label" aria-label="Reading stat">REA: {{ activeUser.rea }}</span>
+      <span class="pre stat-label" aria-label="Precision stat">PRE: {{ activeUser.pre }}</span>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!activeUser && !loading && !searchError && !dataLoading">
+      <div class="empty-state-content">
+        <h2>Welcome to osu! Catch Cards</h2>
+        <p>Search for a player to generate their stats card</p>
+      </div>
+    </div>
+
+    <!-- Database Loading State -->
+    <div class="loading-container" *ngIf="dataLoading && !searchError">
+      <div class="spinner"></div>
+      <p>Loading player database from spreadsheet...</p>
+      <p class="data-info" *ngIf="Users.length > 0">{{ Users.length }} players loaded so far...</p>
+    </div>
+
+    <!-- Data Info -->
+    <div class="data-info-bar" *ngIf="!dataLoading && Users.length > 0 && !activeUser">
+      <p>{{ Users.length }} players in database</p>
     </div>
   </div>
 </div>
 
-<div id="download">
-  <img #canvas />
+<div id="download" aria-hidden="true">
   <a #downloadLink></a>
 </div>

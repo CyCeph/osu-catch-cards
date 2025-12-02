@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Papa } from 'ngx-papaparse';
+import { Observable } from 'rxjs';
 
 export interface User {
   username: string;
@@ -12,6 +13,7 @@ export interface User {
   ar: number;
   length: string;
   rating: number;
+  country: string;
   sr: number;
   rfx: number;
   ten: number;
@@ -21,109 +23,124 @@ export interface User {
   pre: number;
   wrm: number;
   title: string;
-  prevSr: number;
-  prevUpdate: string;
-  prevRfx: number;
-  prevTen: number;
-  prevSta: number;
-  prevAcc: number;
-  prevRea: number;
-  prevPre: number;
-  diffRfx: number;
-  diffTen: number;
-  diffSta: number;
-  diffAcc: number;
-  diffRea: number;
-  diffPre: number;
-  diffSr: number;
+}
+
+export interface CountryResponse {
+  country_acronym: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class SheetFetchService {
-  private SkillRatingLink: string =
-    'https://docs.google.com/spreadsheets/d/1s-ItBZwDzWb_taDPD2L2jrUbNzl4pxjSgXcE5dza4tc/export?format=csv&id=1s-ItBZwDzWb_taDPD2L2jrUbNzl4pxjSgXcE5dza4tc&gid=1043073592';
+  private readonly SKILL_RATING_LINK =
+    'https://docs.google.com/spreadsheets/d/1s-ItBZwDzWb_taDPD2L2jrUbNzl4pxjSgXcE5dza4tc/export?format=csv&id=1s-ItBZwDzWb_taDPD2L2jrUbNzl4pxjSgXcE5dza4tc&gid=64960459';
 
   public Users: User[] = [];
-  constructor(private httpClient: HttpClient, private papa: Papa) {
+
+  constructor(
+    private readonly httpClient: HttpClient,
+    private readonly papa: Papa
+  ) {
     this.getData();
   }
 
+  /**
+   * Fetch and parse user data from Google Sheets
+   */
   private getData(): void {
-    const data = this.httpClient.get(this.SkillRatingLink, {
-      responseType: 'text',
-    });
-
-    data.subscribe((data) => {
-      this.papa.parse(data, {
-        complete: (result) => {
-          const output = result.data;
-          console.log(output);
-
-          output.map((user: any) => {
-            if (true) {
-              let average =
-                (parseFloat(user[9]) +
-                  parseFloat(user[10]) +
-                  parseFloat(user[11]) +
-                  parseFloat(user[12]) +
-                  parseFloat(user[13]) +
-                  parseFloat(user[14])) /
-                6;
-
-              if (user[0] == 'CyCeph') {
-                console.log(average);
-              }
-
-              let sr = Math.pow(parseFloat(user[8]) / 5000, 0.5);
-
-              let score = (100 * sr + average) / 2;
-
-              this.Users.push({
-                username: user[0],
-                uId: user[1],
-                pp: user[2],
-                accPercentage: user[3],
-                starRating: user[4],
-                cs: user[5],
-                ar: user[6],
-                length: user[7],
-                rating: Math.round(score),
-                sr: user[8],
-                rfx: Math.round(user[9]),
-                ten: Math.round(user[10]),
-                sta: Math.round(user[11]),
-                acc: Math.round(user[12]),
-                rea: Math.round(user[13]),
-                pre: Math.round(user[14]),
-                wrm: Math.round(user[15] * 10) / 10,
-                title: user[16],
-                prevSr: user[18],
-                prevUpdate: user[19],
-                prevRfx: user[20],
-                prevTen: user[21],
-                prevSta: user[22],
-                prevAcc: user[23],
-                prevRea: user[24],
-                prevPre: user[25],
-                diffRfx: user[26],
-                diffTen: user[27],
-                diffSta: user[28],
-                diffAcc: user[29],
-                diffRea: user[30],
-                diffPre: user[31],
-                diffSr: user[32],
-              });
-            }
+    this.httpClient
+      .get(this.SKILL_RATING_LINK, { responseType: 'text' })
+      .subscribe({
+        next: (csvData) => {
+          this.papa.parse(csvData, {
+            complete: (result) => {
+              this.parseUserData(result.data);
+            },
+            error: (error) => {
+              console.error('Error parsing CSV data:', error);
+            },
           });
         },
+        error: (error) => {
+          console.error('Error fetching user data:', error);
+        },
       });
-    });
   }
 
-  public getCountryCode(id: string) {
-    return this.httpClient.get(
+  /**
+   * Parse CSV data and calculate user ratings
+   */
+  private parseUserData(data: any[]): void {
+    console.log('Raw CSV data rows:', data.length);
+    console.log('First few rows:', data.slice(0, 3));
+
+    const validRows = data.filter((row) => row && row.length > 20 && row[2]);
+    console.log('Valid rows after filter:', validRows.length);
+
+    if (validRows.length > 0) {
+      console.log('Sample valid row:', validRows[0]);
+    }
+
+    this.Users = validRows.map((row) => {
+        const skills = [
+          parseFloat(row[13]),
+          parseFloat(row[14]),
+          parseFloat(row[15]),
+          parseFloat(row[16]),
+          parseFloat(row[17]),
+          parseFloat(row[18]),
+        ];
+
+        const rating = this.calculateRating(skills);
+
+        return {
+          username: row[2],
+          uId: row[3],
+          pp: parseFloat(row[4]),
+          accPercentage: row[5],
+          starRating: parseFloat(row[6]),
+          cs: parseFloat(row[8]),
+          ar: parseFloat(row[7]),
+          length: row[10],
+          rating: Math.round(rating),
+          country: row[11],
+          sr: parseFloat(row[12]),
+          rfx: Math.round(parseFloat(row[13])),
+          ten: Math.round(parseFloat(row[14])),
+          sta: Math.round(parseFloat(row[15])),
+          acc: Math.round(parseFloat(row[16])),
+          rea: Math.round(parseFloat(row[17])),
+          pre: Math.round(parseFloat(row[18])),
+          wrm: Math.round(parseFloat(row[19]) * 10) / 10,
+          title: row[20],
+        };
+      });
+
+    console.log('Total users loaded:', this.Users.length);
+    if (this.Users.length > 0) {
+      console.log('Sample users:', this.Users.slice(0, 3).map(u => u.username));
+    }
+  }
+
+  /**
+   * Calculate overall rating based on top 3 and bottom 3 skills
+   * Top 3 skills are weighted at 100%, bottom 3 at 50%
+   */
+  private calculateRating(skills: number[]): number {
+    const sortedSkills = [...skills].sort((a, b) => b - a);
+
+    const top3 = sortedSkills.slice(0, 3);
+    const bottom3 = sortedSkills.slice(3);
+
+    const top3Avg = top3.reduce((sum, val) => sum + val, 0) / top3.length;
+    const bottom3Avg = bottom3.reduce((sum, val) => sum + val, 0) / bottom3.length;
+
+    return (top3Avg + bottom3Avg * 0.5) / 1.5;
+  }
+
+  public getCountryCode(id: string): Observable<CountryResponse> {
+    return this.httpClient.get<CountryResponse>(
       `https://osupepe.com/api/users/userstats?userId=${id}`
     );
   }
