@@ -45,44 +45,12 @@
     </div>
 
     <!-- User Card -->
-    <div #screen class="card" [class.shiny]="isShiny" *ngIf="activeUser && userCountry && !loading">
-      <div class="shiny-badge" *ngIf="isShiny">SHINY</div>
-      <img
-        [src]="'assets/' + activeUser.title + '.png'"
-        [alt]="activeUser.title + ' card background'"
-        class="card-background"
-      />
-
-      <img
-        class="profile"
-        [src]="'https://corsproxy.io/?' + encodeURIComponent('https://ameobea.b-cdn.net/osutrack/Mixins/userImage.php?u=' + activeUser.uId)"
-        [alt]="activeUser.username + ' profile picture'"
-        crossorigin="anonymous"
-      />
-
-      <img
-        class="country"
-        [src]="'https://corsproxy.io/?' + encodeURIComponent('https://osu.ppy.sh/assets/images/flags/' + userCountry + '.svg')"
-        [alt]="activeUser.country + ' flag'"
-        crossorigin="anonymous"
-      />
-
-      <span class="rating" aria-label="Overall rating">{{ activeUser.rating }}</span>
-      <span class="wrm" aria-label="Weighted rating multiplier">WRM: {{ activeUser.wrm }}</span>
-
-      <span
-        [ngClass]="activeUser.username.length > 10 ? 'username-long' : 'username-short'"
-        class="username"
-      >
-        {{ activeUser.username }}
-      </span>
-
-      <span class="rfx stat-label" aria-label="Reflex stat">RFX: {{ activeUser.rfx }}</span>
-      <span class="ten stat-label" aria-label="Tenacity stat">TEN: {{ activeUser.ten }}</span>
-      <span class="sta stat-label" aria-label="Stamina stat">STA: {{ activeUser.sta }}</span>
-      <span class="acc stat-label" aria-label="Accuracy stat">ACC: {{ activeUser.acc }}</span>
-      <span class="rea stat-label" aria-label="Reading stat">REA: {{ activeUser.rea }}</span>
-      <span class="pre stat-label" aria-label="Precision stat">PRE: {{ activeUser.pre }}</span>
+    <div class="card-container" *ngIf="activeUser && userCountry && !loading">
+      <canvas
+        #cardCanvas
+        class="card-canvas"
+        [attr.aria-label]="'Card for ' + activeUser.username"
+      ></canvas>
     </div>
 
     <!-- Empty State -->
