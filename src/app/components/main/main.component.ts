@@ -27,9 +27,7 @@ export class MainComponent {
   public downloadError: string = '';
   public dataLoading: boolean = true;
   public isShiny: boolean = false;
-
-  // Expose encodeURIComponent to template
-  public readonly encodeURIComponent = encodeURIComponent;
+  public cardFlipped: boolean = false;
 
   private readonly images: readonly string[] = [
     'Jester.png',
@@ -121,10 +119,6 @@ export class MainComponent {
    * Render the card on canvas
    */
   private async renderCardToCanvas(): Promise<void> {
-    console.log('renderCardToCanvas called');
-    console.log('activeUser:', this.activeUser);
-    console.log('cardCanvas:', this.cardCanvas);
-
     if (!this.activeUser || !this.cardCanvas) {
       console.error('Missing activeUser or cardCanvas');
       return;
@@ -137,48 +131,34 @@ export class MainComponent {
       return;
     }
 
-    console.log('Canvas element:', canvas);
-    console.log('Loading background image:', `assets/${this.activeUser.title}.png`);
-
     try {
-      // Load background image
       const bgImage = await this.loadImage(`assets/${this.activeUser.title}.png`);
-      console.log('Background image loaded:', bgImage.width, 'x', bgImage.height);
 
-      // Set canvas size to match background image
       canvas.width = bgImage.width;
       canvas.height = bgImage.height;
 
-      // Apply shiny effect if needed
       if (this.isShiny) {
         ctx.filter = 'invert(1)';
       }
 
-      // Draw background
       ctx.drawImage(bgImage, 0, 0);
       ctx.filter = 'none';
-      console.log('Background drawn, canvas size set to:', canvas.width, 'x', canvas.height);
 
-      // Load and draw profile picture
       const profileImage = await this.loadImage(
         `https://corsproxy.io/?${encodeURIComponent('https://ameobea.b-cdn.net/osutrack/Mixins/userImage.php?u=' + this.activeUser.uId)}`,
         true
       );
-      // Profile was 267px, make it slightly smaller
-      const profileWidth = canvas.width * 0.294; // Slightly smaller than 0.327
-      const profileHeight = profileWidth; // Square
+      const profileWidth = canvas.width * 0.294;
+      const profileHeight = profileWidth;
       const profileX = canvas.width * 0.197;
       const profileY = canvas.height * 0.206;
-      console.log('Drawing profile at:', profileX, profileY, 'size:', profileWidth, 'x', profileHeight);
       ctx.drawImage(profileImage, profileX, profileY, profileWidth, profileHeight);
 
-      // Load and draw country flag
       const flagImage = await this.loadImage(
         `https://corsproxy.io/?${encodeURIComponent('https://osu.ppy.sh/assets/images/flags/' + this.userCountry + '.svg')}`,
         true
       );
-      // Flag - make it slightly smaller
-      const flagSize = canvas.width * 0.095; // Smaller than 0.11
+      const flagSize = canvas.width * 0.095;
       const flagX = canvas.width * 0.53;
       const flagY = canvas.height * 0.249;
       ctx.save();
@@ -186,85 +166,61 @@ export class MainComponent {
       ctx.scale(1.3, 1.3);
       ctx.drawImage(flagImage, -flagSize / 2, -flagSize / 2, flagSize, flagSize);
       ctx.restore();
-      console.log('Drawing flag at:', flagX, flagY, 'size:', flagSize);
 
-      // Set up text rendering
       ctx.textBaseline = 'top';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
       ctx.shadowBlur = 8;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 2;
 
-      // Draw rating (large white text) - make smaller
-      const ratingSize = canvas.width * 0.105; // Smaller than 0.1176
+      const ratingSize = canvas.width * 0.105;
       ctx.font = `800 ${ratingSize}px Nunito, sans-serif`;
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
       ctx.fillText(this.activeUser.rating.toString(), canvas.width * 0.74, canvas.height * 0.253);
-      console.log('Drawing rating:', this.activeUser.rating, 'size:', ratingSize, 'at:', canvas.width * 0.74, canvas.height * 0.253);
 
-      // Draw username - make smaller
       const isLongUsername = this.activeUser.username.length > 10;
-      const usernameSize = isLongUsername ? canvas.width * 0.058 : canvas.width * 0.075; // Smaller
-      const usernameY = isLongUsername ? canvas.height * 0.485 : canvas.height * 0.485;
+      const usernameSize = isLongUsername ? canvas.width * 0.058 : canvas.width * 0.075;
       ctx.font = `800 ${usernameSize}px Nunito, sans-serif`;
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.fillText(this.activeUser.username, canvas.width * 0.506, usernameY); // Shifted right about 5 pixels
+      ctx.fillText(this.activeUser.username, canvas.width * 0.506, canvas.height * 0.485);
 
-      // Draw WRM - make smaller and shift right
-      const baseSize = canvas.width * 0.055; // Smaller than 0.0613
+      const baseSize = canvas.width * 0.055;
       ctx.font = `700 ${baseSize}px Nunito, sans-serif`;
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.fillText(`WRM: ${this.activeUser.wrm}`, canvas.width * 0.655, canvas.height * 0.35); // Shifted from 0.548 to 0.58
+      ctx.fillText(`WRM: ${this.activeUser.wrm}`, canvas.width * 0.655, canvas.height * 0.35);
 
-      // Draw stats - shift right
       ctx.font = `600 ${baseSize}px Nunito, sans-serif`;
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-
-      // Left column stats - adjusted position
-      ctx.fillText(`RFX: ${this.activeUser.rfx}`, canvas.width * 0.342, canvas.height * 0.570); // Adjusted left slightly
+      ctx.fillText(`RFX: ${this.activeUser.rfx}`, canvas.width * 0.342, canvas.height * 0.570);
       ctx.fillText(`STA: ${this.activeUser.sta}`, canvas.width * 0.342, canvas.height * 0.650);
       ctx.fillText(`REA: ${this.activeUser.rea}`, canvas.width * 0.342, canvas.height * 0.730);
 
-      // Right column stats - adjusted position
-      ctx.fillText(`TEN: ${this.activeUser.ten}`, canvas.width * 0.672, canvas.height * 0.570); // Adjusted left slightly
+      ctx.fillText(`TEN: ${this.activeUser.ten}`, canvas.width * 0.672, canvas.height * 0.570);
       ctx.fillText(`ACC: ${this.activeUser.acc}`, canvas.width * 0.672, canvas.height * 0.650);
       ctx.fillText(`PRE: ${this.activeUser.pre}`, canvas.width * 0.672, canvas.height * 0.730);
 
-      // Draw shiny badge if needed
       if (this.isShiny) {
         const badgeX = canvas.width * 0.98;
         const badgeY = canvas.height * 0.02;
         const badgeWidth = canvas.width * 0.18;
         const badgeHeight = canvas.height * 0.05;
 
-        // Draw badge background
         ctx.shadowBlur = 10;
         ctx.shadowColor = 'rgba(255, 215, 0, 0.5)';
         ctx.fillStyle = '#ffd700';
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
 
-        const radius = 8;
         ctx.beginPath();
-        ctx.roundRect(badgeX - badgeWidth, badgeY, badgeWidth, badgeHeight, radius);
+        ctx.roundRect(badgeX - badgeWidth, badgeY, badgeWidth, badgeHeight, 8);
         ctx.fill();
         ctx.stroke();
 
-        // Draw badge text
         ctx.shadowBlur = 0;
-        // Original was 1.2rem = ~19px at 900px width
-        const badgeTextSize = canvas.width * 0.023; // 19/816
+        const badgeTextSize = canvas.width * 0.023;
         ctx.font = `800 ${badgeTextSize}px Nunito, sans-serif`;
         ctx.fillStyle = '#000000';
         ctx.textAlign = 'center';
         ctx.fillText('✨ SHINY ✨', badgeX - badgeWidth / 2, badgeY + badgeHeight / 3);
       }
-
-      console.log('Card rendering complete!');
     } catch (error) {
       console.error('Error rendering card to canvas:', error);
       this.searchError = 'Failed to render card. Please try again.';
@@ -311,13 +267,9 @@ export class MainComponent {
     this.searchError = '';
     this.downloadError = '';
 
-    console.log(`Searching for "${inputValue}" in ${this.Users.length} users`);
-
     const user = this.Users.find(
       (x) => x.username.toLowerCase() === inputValue.toLowerCase()
     );
-
-    console.log('Found user:', user);
 
     if (!user) {
       this.loading = false;
@@ -328,12 +280,7 @@ export class MainComponent {
     }
 
     this.activeUser = user;
-
-    // 1% chance for shiny card
     this.isShiny = Math.random() < 0.01;
-    if (this.isShiny) {
-      console.log('✨ SHINY CARD! ✨');
-    }
 
     this.fetch.getCountryCode(this.activeUser.uId).subscribe({
       next: async (data: CountryResponse) => {
@@ -345,10 +292,13 @@ export class MainComponent {
           .map((char) => (127397 + char.charCodeAt(0)).toString(16))
           .join('-');
         this.loading = false;
+        this.cardFlipped = false;
 
-        // Wait for the canvas to be rendered in the DOM
         setTimeout(async () => {
           await this.renderCardToCanvas();
+          setTimeout(() => {
+            this.cardFlipped = true;
+          }, 100);
         }, 0);
       },
       error: (error) => {
