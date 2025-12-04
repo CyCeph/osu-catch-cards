@@ -46,18 +46,11 @@
 
     <!-- User Card -->
     <div class="card-container" *ngIf="activeUser && userCountry && !loading">
-      <div class="card-flip" [class.flipped]="cardFlipped">
-        <div class="card-back">
-          <img src="assets/backside.png" alt="Card back" class="card-back-image">
-        </div>
-        <div class="card-front">
-          <canvas
-            #cardCanvas
-            class="card-canvas"
-            [attr.aria-label]="'Card for ' + activeUser.username"
-          ></canvas>
-        </div>
-      </div>
+      <canvas
+        #cardCanvas
+        class="card-canvas"
+        [attr.aria-label]="'Card for ' + activeUser.username"
+      ></canvas>
     </div>
 
     <!-- Empty State -->

@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
 import { SheetFetchService, User, CountryResponse } from 'src/app/service/sheet-fetch.service';
 
 @Component({
@@ -9,6 +9,7 @@ import { SheetFetchService, User, CountryResponse } from 'src/app/service/sheet-
 export class MainComponent {
   // Modern dependency injection
   private readonly fetch = inject(SheetFetchService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @ViewChild('usersearch', { read: ElementRef, static: true })
   userSearch!: ElementRef<HTMLInputElement>;
@@ -27,7 +28,6 @@ export class MainComponent {
   public downloadError: string = '';
   public dataLoading: boolean = true;
   public isShiny: boolean = false;
-  public cardFlipped: boolean = false;
 
   private readonly images: readonly string[] = [
     'Jester.png',
@@ -124,48 +124,86 @@ export class MainComponent {
       return;
     }
 
-    const canvas = this.cardCanvas.nativeElement;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.error('Could not get canvas context');
-      return;
-    }
-
     try {
-      const bgImage = await this.loadImage(`assets/${this.activeUser.title}.png`);
+      // Wait for fonts to load
+      await document.fonts.ready;
+
+      // Load background from production server via CORS proxy (same as profile/flag)
+      const bgImageUrl = `https://cards.cyceph.xyz/assets/${this.activeUser.title}.png`;
+      const bgImage = await this.loadImage(
+        `https://corsproxy.io/?${encodeURIComponent(bgImageUrl)}`,
+        true
+      );
+
+      const canvas = this.cardCanvas.nativeElement;
+      console.log('[5] Got canvas element');
 
       canvas.width = bgImage.width;
       canvas.height = bgImage.height;
+      console.log('[6] Set canvas dimensions to', canvas.width, 'x', canvas.height);
 
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('Could not get canvas context');
+        return;
+      }
+      console.log('[7] Got 2d context');
+
+      // Apply filter if shiny
       if (this.isShiny) {
+        console.log('[8] Applying invert filter for shiny');
         ctx.filter = 'invert(1)';
+      } else {
+        console.log('[8] No filter (not shiny)');
       }
 
+      // Draw ONLY background first - test if this works
+      console.log('[9] About to draw background image to canvas at 0,0');
       ctx.drawImage(bgImage, 0, 0);
-      ctx.filter = 'none';
+      console.log('[10] drawImage() call completed');
 
+      // Check what was actually drawn
+      const imageData = ctx.getImageData(0, 0, 1, 1);
+      console.log('[11] Sample pixel at (0,0):', imageData.data);
+
+      ctx.filter = 'none';
+      console.log('[12] Reset filter to none');
+
+      // Load profile and flag AFTER background is drawn
+      console.log('[13] Loading profile image');
       const profileImage = await this.loadImage(
         `https://corsproxy.io/?${encodeURIComponent('https://ameobea.b-cdn.net/osutrack/Mixins/userImage.php?u=' + this.activeUser.uId)}`,
         true
       );
-      const profileWidth = canvas.width * 0.294;
-      const profileHeight = profileWidth;
-      const profileX = canvas.width * 0.197;
-      const profileY = canvas.height * 0.206;
-      ctx.drawImage(profileImage, profileX, profileY, profileWidth, profileHeight);
+      console.log('[14] Profile image loaded');
 
+      console.log('[15] Loading flag image');
       const flagImage = await this.loadImage(
         `https://corsproxy.io/?${encodeURIComponent('https://osu.ppy.sh/assets/images/flags/' + this.userCountry + '.svg')}`,
         true
       );
+      console.log('[16] Flag image loaded');
+
+      // Draw profile
+      const profileWidth = canvas.width * 0.294;
+      const profileHeight = profileWidth;
+      const profileX = canvas.width * 0.197;
+      const profileY = canvas.height * 0.206;
+      console.log('[17] Drawing profile at', profileX, profileY);
+      ctx.drawImage(profileImage, profileX, profileY, profileWidth, profileHeight);
+      console.log('[18] Profile drawn');
+
+      // Draw flag
       const flagSize = canvas.width * 0.095;
       const flagX = canvas.width * 0.53;
       const flagY = canvas.height * 0.249;
       ctx.save();
       ctx.translate(flagX + flagSize / 2, flagY + flagSize / 2);
       ctx.scale(1.3, 1.3);
+      console.log('[19] Drawing flag');
       ctx.drawImage(flagImage, -flagSize / 2, -flagSize / 2, flagSize, flagSize);
       ctx.restore();
+      console.log('[20] Flag drawn');
 
       ctx.textBaseline = 'top';
       ctx.fillStyle = '#ffffff';
@@ -221,11 +259,14 @@ export class MainComponent {
         ctx.textAlign = 'center';
         ctx.fillText('✨ SHINY ✨', badgeX - badgeWidth / 2, badgeY + badgeHeight / 3);
       }
+
+      console.log('Canvas rendering complete');
     } catch (error) {
       console.error('Error rendering card to canvas:', error);
       this.searchError = 'Failed to render card. Please try again.';
     }
   }
+
 
   /**
    * Load an image and return a promise
@@ -236,9 +277,25 @@ export class MainComponent {
       if (crossOrigin) {
         img.crossOrigin = 'anonymous';
       }
-      img.onload = () => resolve(img);
+
+      // For local assets, ensure complete loading before resolving
+      img.onload = () => {
+        // Double-check the image is actually loaded
+        if (img.complete && img.naturalWidth > 0) {
+          resolve(img);
+        } else {
+          reject(new Error('Image loaded but has no dimensions'));
+        }
+      };
       img.onerror = (error) => reject(error);
-      img.src = src;
+
+      // Add cache busting for local assets to force fresh load
+      // Only for relative paths (not full URLs including proxy URLs)
+      if (!src.startsWith('http') && !src.includes('corsproxy')) {
+        img.src = src + '?t=' + Date.now();
+      } else {
+        img.src = src;
+      }
     });
   }
 
@@ -292,14 +349,13 @@ export class MainComponent {
           .map((char) => (127397 + char.charCodeAt(0)).toString(16))
           .join('-');
         this.loading = false;
-        this.cardFlipped = false;
+        this.cdr.detectChanges();
 
-        setTimeout(async () => {
-          await this.renderCardToCanvas();
-          setTimeout(() => {
-            this.cardFlipped = true;
-          }, 100);
-        }, 0);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(async () => {
+            await this.renderCardToCanvas();
+          });
+        });
       },
       error: (error) => {
         console.error('Error fetching country code:', error);
