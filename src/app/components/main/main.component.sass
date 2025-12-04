@@ -202,14 +202,21 @@
 // Card Styles
 .card-container
     width: 100%
-    max-width: 900px
+    max-width: min(900px, 90vw)
     margin: 0 auto
     display: flex
     justify-content: center
     align-items: center
+    animation: cardFadeIn 0.5s ease-out
 
 .card-canvas
     display: block
+    width: 100%
+    max-height: 70vh
+    height: auto
+    object-fit: contain
+    border-radius: 12px
+    box-shadow: var(--shadow)
 
 // Download Section
 #download
