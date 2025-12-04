@@ -12,6 +12,39 @@
     --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.7)
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
 
+// Back Button
+.back-button
+    position: fixed
+    top: 2rem
+    left: 2rem
+    width: 48px
+    height: 48px
+    display: flex
+    align-items: center
+    justify-content: center
+    background: rgba(26, 26, 26, 0.8)
+    backdrop-filter: blur(10px)
+    border: 2px solid var(--primary-color)
+    border-radius: 50%
+    color: var(--primary-color)
+    text-decoration: none
+    transition: var(--transition)
+    z-index: 100
+    cursor: pointer
+
+    svg
+        width: 24px
+        height: 24px
+
+    &:hover
+        background: var(--primary-color)
+        color: #000000
+        transform: translateX(-4px)
+        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5)
+
+    @media (max-width: 768px)
+        display: none
+
 .container
     width: 100%
     min-height: 100vh
