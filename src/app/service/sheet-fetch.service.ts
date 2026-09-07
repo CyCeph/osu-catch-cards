@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Papa } from 'ngx-papaparse';
+import * as Papa from 'papaparse';
 import { Observable } from 'rxjs';
 
 export interface User {
@@ -38,10 +38,7 @@ export class SheetFetchService {
 
   public Users: User[] = [];
 
-  constructor(
-    private readonly httpClient: HttpClient,
-    private readonly papa: Papa
-  ) {
+  constructor(private readonly httpClient: HttpClient) {
     this.getData();
   }
 
@@ -53,11 +50,11 @@ export class SheetFetchService {
       .get(this.SKILL_RATING_LINK, { responseType: 'text' })
       .subscribe({
         next: (csvData) => {
-          this.papa.parse(csvData, {
+          Papa.parse(csvData, {
             complete: (result) => {
               this.parseUserData(result.data);
             },
-            error: (error) => {
+            error: (error: Error) => {
               console.error('Error parsing CSV data:', error);
             },
           });

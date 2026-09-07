@@ -1,8 +1,10 @@
 import { Component, ElementRef, ViewChild, inject, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { SheetFetchService, User, CountryResponse } from 'src/app/service/sheet-fetch.service';
 
 @Component({
   selector: 'app-main',
+  imports: [CommonModule],
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.sass'],
 })
